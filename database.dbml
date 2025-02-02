@@ -1,0 +1,237 @@
+Project CensusDatabase {
+  database_type: 'MySQL'
+  Note: '''
+    # Census Data Management
+    **This database contains information related to census enumeration, household data, members, and various statistics on literacy, mortality, emigration, agriculture, and housing conditions.**
+  '''
+}
+
+Table CensusEnumeration {
+  ID int [pk]
+  Household int
+  Date_Started timestamp
+  Date_Completed timestamp
+  Total_Visits int
+  Enumerator int
+}
+
+Table Households {
+  ID int [pk]
+  Region varchar
+  District varchar
+  Locality varchar
+  Address varchar
+  Head varchar
+  EA_Number int
+  Subdistrict varchar
+  District_Type varchar
+  EA_Type varchar
+  Structure_Number int
+  Household_Number int
+  Type_of_Residence varchar
+  Contact_Number1 varchar
+  Contact_Number2 varchar
+  NHIS_VRA_Other_Number varchar
+}
+
+Table HouseholdMembers {
+  ID int [pk]
+  Name varchar
+  Relationship_to_Head varchar
+  Sex varchar
+  Status varchar
+  Household int
+}
+
+Table Absentees {
+  ID int [pk]
+  Household int
+  Name varchar
+  Relationship_to_Head varchar
+  Status varchar
+  Age int
+  Destination varchar
+  Months_Absent int
+  Sex varchar
+}
+
+Table Literacy {
+  ID int [pk]
+  Member int
+  Household int
+  Read_Write_Language varchar
+  Highest_Level_of_School varchar
+  Highest_Grade_Attained varchar
+  Period_Attending_School varchar
+}
+
+Table Fertility {
+  ID int [pk]
+  Member int
+  Household int
+  Total_Males int
+  Total_Females int
+  Surviving_Males int
+  Surviving_Females int
+  Female_Births_Last12Months int
+  Male_Births_Last12Months int
+}
+
+Table HouseholdICT {
+  ID int [pk]
+  Household int
+  Has_Fixed_Telephone boolean
+  Has_Computer boolean
+}
+
+Table Mortality {
+  ID int [pk]
+  Household int
+  Name varchar
+  Had_Unnatural_Death boolean
+  Sex varchar
+  Age int
+  Death_Related_to_Birth boolean
+}
+
+Table Emigration {
+  ID int [pk]
+  Household int
+  Name varchar
+  Relationship_to_Head varchar
+  Sex varchar
+  Age int
+  Destination varchar
+  Destination_Code varchar
+  Activity_Abroad varchar
+}
+
+Table ICTHouseholdMember {
+  ID int [pk]
+  Member int
+  Household int
+  Has_Phone boolean
+  Has_Internet boolean
+}
+
+Table Disability {
+  ID int [pk]
+  Member int
+  Household int
+  Sight boolean
+  Hearing boolean
+  Physical boolean
+  Intellectual boolean
+  Emotional boolean
+  Speech boolean
+  Other boolean
+}
+
+Table EconomicActivities {
+  ID int [pk]
+  Member int
+  Household int
+  Working_Past7Days boolean
+  Activity_Engaged varchar
+  Reason_Not_Working varchar
+  Occupation_Code varchar
+  Detailed_Occupation varchar
+  Employment_Status varchar
+  Employment_Sector varchar
+  Name_of_Establishment varchar
+  Location_of_Establishment varchar
+  Main_Product_Service_Code varchar
+}
+
+Table Demography {
+  ID int [pk]
+  Member int
+  Household int
+  Date_of_Birth timestamp
+  Birthplace varchar
+  Born_in_Town boolean
+  Living_in_Village_Since_Birth boolean
+  Years_Lived_in_Village int
+  Religion varchar
+  Nationality varchar
+  Ethnicity varchar
+  Age int
+}
+
+Table AgricultureActivities {
+  ID int [pk]
+  Household int
+  Crop_Farming boolean
+  Tree_Growing boolean
+  Livestock_Rearing boolean
+  Fish_Farming boolean
+  Male_Members_in_Farming int
+  Female_Members_in_Farming int
+}
+
+Table CropFarmingOrTreePlantingActivities {
+  ID int [pk]
+  Household int
+  Type_of_Crop_Tree_Planting varchar
+  Crop_Code varchar
+  Farm_Size int
+  Measurement_Unit varchar
+  Type_of_Cropping varchar
+}
+
+Table LivestockOrFisheries {
+  ID int [pk]
+  Household int
+  Type_of_Livestock_Fisheries varchar
+  Code varchar
+  Number int
+}
+
+Table HousingConditions {
+  ID int [pk]
+  Household int
+  Type_of_Dwelling varchar
+  Outer_Wall_Material varchar
+  Floor_Material varchar
+  Roof_Material varchar
+  Tenure_Arrangement varchar
+  Ownership_Type varchar
+  Rooms_Occupied int
+  Total_Bedrooms int
+  Shared_Bedroom boolean
+  Number_of_Households_Sharing_Bedroom int
+  Main_Light_Source varchar
+  Main_Water_Supply_Drinking varchar
+  Main_Water_Supply_Domestic varchar
+  Main_Cooking_Fuel varchar
+  Cooking_Space varchar
+  Bathing_Facility varchar
+  Toilet_Facility varchar
+  Sharing_Toilet_Mechanism varchar
+  Number_of_Households_Sharing_Toilet int
+  Solid_Refuse_Disposal varchar
+  Liquid_Waste_Disposal varchar
+}
+
+Table Enumerators {
+  ID int [pk]
+  Name varchar
+}
+
+Ref: CensusEnumeration.Household > Households.ID
+Ref: Households.ID > HouseholdMembers.Household
+Ref: Households.ID > Absentees.Household
+Ref: HouseholdMembers.ID > Literacy.Member
+Ref: HouseholdMembers.ID > Fertility.Member
+Ref: Households.ID > HouseholdICT.Household
+Ref: Households.ID > Mortality.Household
+Ref: Households.ID > Emigration.Household
+Ref: HouseholdMembers.ID > ICTHouseholdMember.Member
+Ref: HouseholdMembers.ID > Disability.Member
+Ref: HouseholdMembers.ID > EconomicActivities.Member
+Ref: HouseholdMembers.ID > Demography.Member
+Ref: Households.ID > AgricultureActivities.Household
+Ref: AgricultureActivities.ID > CropFarmingOrTreePlantingActivities.ID
+Ref: AgricultureActivities.ID > LivestockOrFisheries.ID
+Ref: Households.ID > HousingConditions.Household
+Ref: Enumerators.ID > CensusEnumeration.Enumerator
