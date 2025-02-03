@@ -10,7 +10,8 @@ class BackupController extends Controller
     {
         try {
             // List the tables you want to back up
-            $tables = ['census_enumerations',
+            $tables = [
+                'census_enumerations',
                 'households',
                 'household_members',
                 'absentees',
@@ -27,8 +28,15 @@ class BackupController extends Controller
                 'crop_farming_or_tree_planting_activities',
                 'livestock_or_fisheries',
                 'housing_conditions',
-                'enumerators']; // Add more if needed
-            BackupTables::generateBackup($tables);
+                'enumerators'
+            ];
+
+            // Shorten table names to avoid exceeding the 64-character limit
+            $shortenedTables = array_map(function ($table) {
+                return substr($table, 0, 50); // Limit to 50 characters (leaving room for timestamp)
+            }, $tables);
+
+            BackupTables::generateBackup($shortenedTables);
 
             return response()->json(['message' => 'Backup successful'], 200);
         } catch (\Exception $e) {
