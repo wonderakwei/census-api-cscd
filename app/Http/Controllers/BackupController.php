@@ -25,7 +25,6 @@ class BackupController extends Controller
                 'economic_activities',
                 'demography',
                 'agriculture_activities',
-                'crop_farming_or_tree_planting_activities',
                 'livestock_or_fisheries',
                 'housing_conditions',
                 'enumerators'
