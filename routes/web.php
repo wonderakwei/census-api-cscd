@@ -9,5 +9,7 @@ Route::get('/', function () {
 
 
 Route::prefix('api')->group(function () {
-    Route::get('/backup', [BackupController::class, 'createBackup']);
+    Route::get('/backup', [BackupController::class, 'backupTables']);
 });
+
+
