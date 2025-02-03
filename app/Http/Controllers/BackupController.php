@@ -1,35 +1,83 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
+use ZipArchive;
 
 class BackupController extends Controller
 {
-    public function createBackup(): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+    public function createBackup(): BinaryFileResponse|\Illuminate\Http\JsonResponse
     {
         try {
-            // Set up backup file name with timestamp
-            $backupFile = 'backup_' . Carbon::now()->format('Y_m_d_H_i_s') . '.sql';
-            $backupPath = storage_path('app/' . $backupFile);
+            // List of tables to backup
+            $tables = [
+                'census_enumerations',
+                'households',
+                'household_members',
+                'absentees',
+                'literacy',
+                'fertility',
+                'household_ict',
+                'mortality',
+                'emigration',
+                'icthousehold_member',
+                'disability',
+                'economic_activities',
+                'demography',
+                'agriculture_activities',
+                'crop_farming_or_tree_planting_activities',
+                'livestock_or_fisheries',
+                'housing_conditions',
+                'enumerators'
+            ];
 
-            // Use mysqldump to back up the database
-            $command = "mysqldump -u " . env('DB_USERNAME') . " -p'" . env('DB_PASSWORD') . "' " . env('DB_DATABASE') . " > " . $backupPath;
-            exec($command);
+            // Format file names
+            $timestamp = Carbon::now()->format('Y_m_d_H_i_s');
+            $sqlFileName = "backup_{$timestamp}.sql";
+            $zipFileName = "backup_{$timestamp}.zip";
+            $sqlFilePath = storage_path("app/{$sqlFileName}");
+            $zipFilePath = storage_path("app/{$zipFileName}");
 
-            // Check if the backup file exists
-            if (!file_exists($backupPath)) {
-                return response()->json(['error' => 'Database backup failed'], 500);
+            // Ensure storage directory exists
+            File::ensureDirectoryExists(storage_path('app'));
+
+            // Generate the MySQL dump command for selected tables
+            $command = sprintf(
+                'mysqldump -u%s -p%s %s %s --no-tablespaces --skip-lock-tables > %s',
+                escapeshellarg(env('DB_USERNAME')),
+                escapeshellarg(env('DB_PASSWORD')),
+                escapeshellarg(env('DB_DATABASE')),
+                implode(' ', array_map('escapeshellarg', $tables)), // Ensure each table name is properly escaped
+                escapeshellarg($sqlFilePath)
+            );
+
+            // Execute the command
+            shell_exec($command);
+
+            // Verify backup file contains data
+            if (!file_exists($sqlFilePath) || filesize($sqlFilePath) === 0) {
+                return response()->json(['error' => 'Database backup failed or is empty'], 500);
             }
 
-            // Return the backup file for download and delete after sending
-            return response()->download($backupPath)->deleteFileAfterSend(true);
+            // Create ZIP archive
+            $zip = new ZipArchive();
+            if ($zip->open($zipFilePath, ZipArchive::CREATE) === true) {
+                $zip->addFile($sqlFilePath, $sqlFileName);
+                $zip->close();
+                unlink($sqlFilePath); // Delete SQL file after zipping
+            } else {
+                return response()->json(['error' => 'Could not create ZIP archive'], 500);
+            }
+
+            // Return the ZIP file for download
+            return response()->download($zipFilePath)->deleteFileAfterSend(true);
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Backup failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Backup failed: ' . $e->getMessage()], 500);
         }
     }
 }
